@@ -113,7 +113,7 @@ def main():
                 srt_content = transcribe_audio(
                     audio_data, 
                     model_size="base", 
-                    language="fr", 
+                    language="auto", 
                     output_file=srt_output_path,
                     format="srt", 
                     quiet=True
