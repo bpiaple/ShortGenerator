@@ -2,6 +2,7 @@ import gradio as gr
 from utils.api_config import setup_gemini_api
 from utils.audio_utils import generate_audio
 from utils.file_utils import generate_video
+from utils.srt_utils import transcribe_audio
 from static.custom_css import custom_css
 
 # Import des onglets
@@ -81,6 +82,13 @@ def main():
                     type="filepath",
                     elem_classes="audio-preview"
                 )
+                
+                # Ajout d'un élément pour les timestamps (sous-titres)
+                timestamps_output = gr.File(
+                    label="Timestamps générés (SRT)",
+                    file_types=[".srt"],
+                    interactive=False
+                )
 
                 generate_audio_btn = gr.Button(
                     "Générer l'audio 40 ⚡",
@@ -95,13 +103,37 @@ def main():
 
         # Événement pour générer l'audio
         def process_audio_generation(script, voix):
+            # Génération de l'audio
             audio_data, status_message = generate_audio(script, voix)
-            return audio_data, status_message
+            
+            # Si l'audio a été généré avec succès, générer également les timestamps
+            if audio_data:
+                # Générer les sous-titres SRT à partir de l'audio
+                srt_output_path = audio_data.replace('.mp3', '.srt')
+                srt_content = transcribe_audio(
+                    audio_data, 
+                    model_size="base", 
+                    language="fr", 
+                    output_file=srt_output_path,
+                    format="srt", 
+                    quiet=True
+                )
+                
+                if srt_content:
+                    status_message += "<br>✅ Timestamps générés avec succès!"
+                else:
+                    status_message += "<br>❌ Échec de la génération des timestamps."
+                    srt_output_path = None
+                
+                return audio_data, status_message, srt_output_path
+            
+            # En cas d'échec de la génération audio
+            return None, status_message, None
             
         generate_audio_btn.click(
             fn=process_audio_generation,
-            inputs=[script_editor, voice_list],  # Utiliser l'éditeur de script pour obtenir le texte brut
-            outputs=[audio_output, audio_status]
+            inputs=[script_editor, voice_list],
+            outputs=[audio_output, audio_status, timestamps_output]
         )
 
     demo.launch()
