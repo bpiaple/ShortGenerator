@@ -172,8 +172,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
-
-.env
+*.env
+env
+*.env
 temp_audio/
 temp_video/
 temp_image/
