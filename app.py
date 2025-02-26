@@ -90,7 +90,7 @@ def generate_video():
     # Simulation de la génération de vidéo
     return "Vidéo en cours de génération..."
 
-def generate_audio(script):
+def generate_audio(script, voix):
     try:
         # Vérification de l'API ElevenLabs
         if not setup_elevenlabs_api():
@@ -115,7 +115,8 @@ def generate_audio(script):
         
         # Conversion texte en audio
         audio = audio_client.text_to_speech.convert(
-            voice_id="JBFqnCBsd6RMkjVDRZzb",
+            # voice_id="JBFqnCBsd6RMkjVDRZzb",
+            voice_id=voix,
             output_format="mp3_44100_128",
             text=clean_text,
             model_id="eleven_multilingual_v2"
@@ -379,10 +380,16 @@ def main():
                         elem_id="music-picker",
                         elem_classes="secondary-button"
                     )
-                    voice_btn = gr.Button(
-                        "🎙 Sélectionner la voix off",
-                        elem_classes="secondary-button"
+                    voice_list = gr.Dropdown(
+                        choices=["JBFqnCBsd6RMkjVDRZzb", "9BWtsMINqrJLrRacOk9x", "SAz9YHcvj6GT2YYXdXww"],
+                        label="Voix off",
+                        value="JBFqnCBsd6RMkjVDRZzb",
                     )
+
+                    # voice_btn = gr.Button(
+                    #     "🎙 Sélectionner la voix off",
+                    #     elem_classes="secondary-button"
+                    # )
             
             # Colonne de droite pour la prévisualisation
             with gr.Column(scale=1):
@@ -446,13 +453,13 @@ def main():
         )
 
         # Événement pour générer l'audio
-        def process_audio_generation(script):
-            audio_data, status_message = generate_audio(script)
+        def process_audio_generation(script, voix):
+            audio_data, status_message = generate_audio(script, voix)
             return audio_data, status_message
             
         generate_audio_btn.click(
             fn=process_audio_generation,
-            inputs=[script_editor],  # Utiliser l'éditeur de script pour obtenir le texte brut
+            inputs=[script_editor, voice_list],  # Utiliser l'éditeur de script pour obtenir le texte brut
             outputs=[audio_output, audio_status]
         )
 

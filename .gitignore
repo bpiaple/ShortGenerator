@@ -174,3 +174,6 @@ cython_debug/
 .pypirc
 
 .env
+temp_audio/
+temp_video/
+temp_image/
