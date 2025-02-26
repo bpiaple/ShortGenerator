@@ -3,7 +3,7 @@ from PIL import Image
 import glob
 import google.generativeai as genai
 from elevenlabs.client import ElevenLabs
-from elevenlabs import play
+import uuid
 import os
 from dotenv import load_dotenv
 
@@ -14,25 +14,16 @@ load_dotenv()
 
 # Configuration de l'API ElevenLabs
 def setup_elevenlabs_api():
-    """
-    The function `setup_elevenlabs_api` checks for the presence of an API key for ElevenLabs and prompts
-    the user to define it if not found.
-    :return: The function `setup_elevenlabs_api()` is returning `False` if the API key for ElevenLabs is
-    not found in the environment variables.
-    """
     api_key = os.getenv("ELEVENLABS_API_KEY")
     if not api_key:
         print("⚠️ Clé API ElevenLabs non trouvée. Veuillez définir ELEVENLABS_API_KEY dans un fichier .env")
         return False
+    
+    # Configuration réussie
+    return True
 
 # Configuration de l'API Gemini
 def setup_gemini_api():
-    """
-    The function `setup_gemini_api` checks for the presence of a Gemini API key and configures the API
-    if the key is found.
-    :return: The function `setup_gemini_api()` returns a boolean value - `True` if the Gemini API key is
-    successfully configured, and `False` if the API key is not found.
-    """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("⚠️ Clé API Gemini non trouvée. Veuillez définir GEMINI_API_KEY dans un fichier .env")
@@ -99,16 +90,57 @@ def generate_video():
     # Simulation de la génération de vidéo
     return "Vidéo en cours de génération..."
 
-def generate_audio(script: str):
-    audio_client = ElevenLabs()
-    audio = audio_client.text_to_speech.convert(
-        voice_id="JBFqnCBsd6RMkjVDRZzb",
-        output_format="mp3_44100_128",
-        text=script,
-        model_id="eleven_multilingual_v2"
-    )
-    # Simulation de la génération de l'audio
-    return audio
+def generate_audio(script):
+    try:
+        # Vérification de l'API ElevenLabs
+        if not setup_elevenlabs_api():
+            return None, "Erreur: Clé API ElevenLabs non configurée. Veuillez ajouter une clé API dans le fichier .env"
+        
+        # Si le script est au format Markdown, extraction du texte brut
+        # Suppression des balises Markdown simples pour une meilleure lecture audio
+        clean_text = script
+        if script.startswith("#") or "**" in script or "- " in script:
+            # Supprimer les titres (#)
+            clean_text = clean_text.replace("#", "")
+            # Supprimer les marqueurs de gras (**)
+            clean_text = clean_text.replace("**", "")
+            # Remplacer les puces par des phrases
+            clean_text = clean_text.replace("- ", ". ")
+            # Supprimer les sauts de ligne excessifs
+            clean_text = " ".join(line.strip() for line in clean_text.splitlines() if line.strip())
+        
+        # Initialiser le client ElevenLabs
+        api_key = os.getenv("ELEVENLABS_API_KEY")
+        audio_client = ElevenLabs(api_key=api_key)
+        
+        # Conversion texte en audio
+        audio = audio_client.text_to_speech.convert(
+            voice_id="JBFqnCBsd6RMkjVDRZzb",
+            output_format="mp3_44100_128",
+            text=clean_text,
+            model_id="eleven_multilingual_v2"
+        )
+
+        # Generating a unique file name for the output MP3 file
+        temp_dir = os.path.join(os.getcwd(), "temp_audio")
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        saved_audio_path = os.path.join(temp_dir, f"{uuid.uuid4()}.mp3")
+        
+        # Writing the audio stream to the file
+        with open(saved_audio_path, "wb") as f:
+            for chunk in audio:
+                if chunk:
+                    f.write(chunk)
+
+        print(f"Un nouveau fichier audio a été enregistré avec succès: {saved_audio_path}")
+
+        # Return the path of the saved audio file and a success message
+        return saved_audio_path, "Audio généré avec succès!"
+
+    except Exception as e:
+        print(f"Erreur détaillée: {str(e)}")
+        return None, f"Erreur lors de la génération de l'audio: {str(e)}"
 
 # Définition du style personnalisé
 custom_css = """
@@ -359,16 +391,19 @@ def main():
                     label="Votre vidéo apparaîtra ici !",
                     elem_classes="video-preview"
                 )
-
-                # Prévisualisation audio
-                audio_output = gr.Audio(
-                    label="Votre musique de fond apparaîtra ici !",
-                    elem_classes="video-preview"
-                )
+                
+                audio_status = gr.Markdown("*L'audio apparaîtra ici après génération*")
                 
                 generate_video_btn = gr.Button(
                     "Générer la vidéo 60 ⚡",
                     elem_classes="primary-button"
+                )
+                
+                # Prévisualisation audio
+                audio_output = gr.Audio(
+                    label="Prévisualisation audio",
+                    type="filepath",
+                    elem_classes="audio-preview"
                 )
 
                 generate_audio_btn = gr.Button(
@@ -410,10 +445,15 @@ def main():
             outputs=video_output
         )
 
+        # Événement pour générer l'audio
+        def process_audio_generation(script):
+            audio_data, status_message = generate_audio(script)
+            return audio_data, status_message
+            
         generate_audio_btn.click(
-            fn=generate_audio,
-            inputs=script_output,
-            outputs=audio_output
+            fn=process_audio_generation,
+            inputs=[script_editor],  # Utiliser l'éditeur de script pour obtenir le texte brut
+            outputs=[audio_output, audio_status]
         )
 
         # Activation/désactivation de l'appel à l'action
