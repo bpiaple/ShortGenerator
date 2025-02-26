@@ -99,6 +99,17 @@ def generate_video():
     # Simulation de la génération de vidéo
     return "Vidéo en cours de génération..."
 
+def generate_audio(script: str):
+    audio_client = ElevenLabs()
+    audio = audio_client.text_to_speech.convert(
+        voice_id="JBFqnCBsd6RMkjVDRZzb",
+        output_format="mp3_44100_128",
+        text=script,
+        model_id="eleven_multilingual_v2"
+    )
+    # Simulation de la génération de l'audio
+    return audio
+
 # Définition du style personnalisé
 custom_css = """
 .container {
@@ -348,10 +359,21 @@ def main():
                     label="Votre vidéo apparaîtra ici !",
                     elem_classes="video-preview"
                 )
+
+                # Prévisualisation audio
+                audio_output = gr.Audio(
+                    label="Votre musique de fond apparaîtra ici !",
+                    elem_classes="video-preview"
+                )
                 
                 generate_video_btn = gr.Button(
                     "Générer la vidéo 60 ⚡",
                     elem_classes="primary-button"
+                )
+
+                generate_audio_btn = gr.Button(
+                    "Générer l'audio 40 ⚡",
+                    elem_classes="secondary-button"
                 )
 
         # Événements pour la génération du script
@@ -387,7 +409,13 @@ def main():
             fn=generate_video,
             outputs=video_output
         )
-        
+
+        generate_audio_btn.click(
+            fn=generate_audio,
+            inputs=script_output,
+            outputs=audio_output
+        )
+
         # Activation/désactivation de l'appel à l'action
         def toggle_cta(is_checked):
             return gr.Textbox.update(visible=is_checked)
