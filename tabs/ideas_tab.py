@@ -103,23 +103,14 @@ def create_ideas_tab():
                 placeholder="# Titre\n\n**Texte en gras**\n\n- Point 1\n- Point 2\n\n## Conclusion"
             )
             apply_edit_btn = gr.Button("Appliquer les modifications", elem_classes="secondary-button")
-
-        # Définition des événements spécifiques à cet onglet
-        def update_script(generated_script):
-            # Assurons-nous que le format markdown est correct
-            if not generated_script.strip().startswith("#") and not generated_script.strip().startswith("*"):
-                # Ajoutons un formatage minimal si aucun n'est présent
-                generated_script = f"# Script généré\n\n{generated_script}"
-            
-            return generated_script, generated_script
         
         generate_script_btn.click(
             fn=generate_script_with_gemini,
             inputs=[prompt, language, style],
-            outputs=gr.State("")  # État temporaire
+            outputs=script_output
         ).then(
-            fn=update_script,
-            inputs=gr.State(""),  # L'état sera remplacé par le résultat de generate_script_with_gemini
+            fn=lambda x: (x, x),
+            inputs=script_output,
             outputs=[script_output, script_editor]
         )
         
