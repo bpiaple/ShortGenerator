@@ -8,7 +8,6 @@ import os
 from dotenv import load_dotenv
 
 
-
 # Chargement des variables d'environnement (pour la clé API)
 load_dotenv()
 
@@ -85,10 +84,18 @@ def load_images():
             print(f"Erreur lors du chargement de {path}: {e}")
     return images
 
-
 def generate_video():
     # Simulation de la génération de vidéo
     return "Vidéo en cours de génération..."
+
+def convert_voice_id(voix: str) -> str:
+    if voix == "River":
+        return "SAz9YHcvj6GT2YYXdXww"
+    elif voix == "Laura":
+        return "FGY2WhTYpPnrIDTdsKH5"
+    elif voix == "George":
+        return "JBFqnCBsd6RMkjVDRZzb"
+ 
 
 def generate_audio(script, voix):
     try:
@@ -113,6 +120,7 @@ def generate_audio(script, voix):
         api_key = os.getenv("ELEVENLABS_API_KEY")
         audio_client = ElevenLabs(api_key=api_key)
         
+        voix = convert_voice_id(voix)
         # Conversion texte en audio
         audio = audio_client.text_to_speech.convert(
             # voice_id="JBFqnCBsd6RMkjVDRZzb",
@@ -381,9 +389,10 @@ def main():
                         elem_classes="secondary-button"
                     )
                     voice_list = gr.Dropdown(
-                        choices=["JBFqnCBsd6RMkjVDRZzb", "9BWtsMINqrJLrRacOk9x", "SAz9YHcvj6GT2YYXdXww"],
+                        choices=["Laura", "George", "River"],
                         label="Voix off",
-                        value="JBFqnCBsd6RMkjVDRZzb",
+                        value="George",
+                        container=False
                     )
 
                     # voice_btn = gr.Button(
