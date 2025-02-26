@@ -14,6 +14,12 @@ load_dotenv()
 
 # Configuration de l'API ElevenLabs
 def setup_elevenlabs_api():
+    """
+    The function `setup_elevenlabs_api` checks for the presence of an API key for ElevenLabs and prompts
+    the user to define it if not found.
+    :return: The function `setup_elevenlabs_api()` is returning `False` if the API key for ElevenLabs is
+    not found in the environment variables.
+    """
     api_key = os.getenv("ELEVENLABS_API_KEY")
     if not api_key:
         print("⚠️ Clé API ElevenLabs non trouvée. Veuillez définir ELEVENLABS_API_KEY dans un fichier .env")
@@ -21,6 +27,12 @@ def setup_elevenlabs_api():
 
 # Configuration de l'API Gemini
 def setup_gemini_api():
+    """
+    The function `setup_gemini_api` checks for the presence of a Gemini API key and configures the API
+    if the key is found.
+    :return: The function `setup_gemini_api()` returns a boolean value - `True` if the Gemini API key is
+    successfully configured, and `False` if the API key is not found.
+    """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("⚠️ Clé API Gemini non trouvée. Veuillez définir GEMINI_API_KEY dans un fichier .env")

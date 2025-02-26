@@ -1,0 +1,5 @@
+{
+    "docwriter.style": "Google",
+    "docwriter.progress.trackFunctions": false,
+    "docwriter.progress.trackMethods": true
+}
