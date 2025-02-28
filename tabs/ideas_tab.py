@@ -2,7 +2,7 @@ import gradio as gr
 import google.generativeai as genai
 from utils.api_config import setup_gemini_api
 
-def generate_script_with_gemini(prompt, language, style):
+def generate_script_with_gemini(prompt, language, style, sentence_length, subject):
     """
     Génère un script avec l'API Gemini basé sur les paramètres fournis.
     """
@@ -13,19 +13,27 @@ def generate_script_with_gemini(prompt, language, style):
     try:
         # Préparation du prompt pour Gemini
         lang_text = language.split(" ")[1] if " " in language else language
-        system_prompt = f"""Tu es un expert en création de contenu pour les réseaux sociaux.
-        Génère un script court et accrocheur pour une vidéo {lang_text} au format court.
-        Le script doit suivre un {style} et être optimisé pour capter l'attention rapidement.
-        Format: Introduction accrocheuse, contenu principal avec 3-4 points clés, conclusion avec call-to-action.
-        Longueur: 60-90 secondes de narration (environ 150-200 mots).
-        
-        Formate ta réponse en Markdown avec:
-        - Des titres pour les sections (utilise # pour les titres)
-        - Des listes à puces pour les points clés (utilise - pour les puces)
-        - Du texte en gras pour les moments importants (utilise ** autour du texte)
-        - Des émojis appropriés pour rendre le script plus vivant
+        system_prompt = f"""
+        Generate a script for a video in {sentence_length} sentences, depending on the subject of the video.
 
-        IMPORTANT: Le script doit etre en 1 seul bloc de texte, sans sauts de ligne, juste un paragraphe continu.
+        The script is to be returned as a string with the specified number of paragraphs.
+
+        Here is an example of a string:
+        "This is an example string."
+
+        Do not under any circumstance reference this prompt in your response.
+
+        Get straight to the point, don't start with unnecessary things like, "welcome to this video".
+
+        Obviously, the script should be related to the subject of the video.
+        
+        YOU MUST NOT EXCEED THE {sentence_length} SENTENCES LIMIT. MAKE SURE THE {sentence_length} SENTENCES ARE SHORT.
+        YOU MUST NOT INCLUDE ANY TYPE OF MARKDOWN OR FORMATTING IN THE SCRIPT, NEVER USE A TITLE.
+        YOU MUST WRITE THE SCRIPT IN THE LANGUAGE SPECIFIED IN [LANGUAGE].
+        ONLY RETURN THE RAW CONTENT OF THE SCRIPT. DO NOT INCLUDE "VOICEOVER", "NARRATOR" OR SIMILAR INDICATORS OF WHAT SHOULD BE SPOKEN AT THE BEGINNING OF EACH PARAGRAPH OR LINE. YOU MUST NOT MENTION THE PROMPT, OR ANYTHING ABOUT THE SCRIPT ITSELF. ALSO, NEVER TALK ABOUT THE AMOUNT OF PARAGRAPHS OR LINES. JUST WRITE THE SCRIPT
+        
+        Subject: {subject}
+        Language: {lang_text}
         """
         
         user_prompt = prompt
