@@ -178,3 +178,5 @@ env
 temp_audio/
 temp_video/
 temp_image/
+
+models/
